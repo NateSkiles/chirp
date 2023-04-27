@@ -1,4 +1,4 @@
-import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 
@@ -8,12 +8,25 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
 import { LoadingPage } from "~/components/loading";
+import { useState } from "react";
 
 // Add relativeTime pluging
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+
+  const [input, setInput] = useState("");
+
+  const ctx = api.useContext();
+
+  const { mutate } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      // void bc invalidate is promise and not awaiting
+      void ctx.posts.getAll.invalidate();
+    },
+  });
 
   if (!user) return null;
   return (
@@ -28,7 +41,11 @@ const CreatePostWizard = () => {
       <input
         placeholder="What's happening? (Emoji's Only)"
         className="grow bg-transparent outline-none"
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
       />
+      <button onClick={() => mutate({ content: input })}>Post</button>
     </div>
   );
 };
@@ -63,9 +80,14 @@ const PostView = (props: PostWithUser) => {
 const Feed = () => {
   const { data, isLoading: postsLoading } = api.posts.getAll.useQuery();
 
-  if (postsLoading) return <LoadingPage />;
+  if (postsLoading)
+    return (
+      <div>
+        <LoadingPage />
+      </div>
+    );
 
-  if (!data) return <div>Something went wrong...</div>
+  if (!data) return <div>Something went wrong...</div>;
 
   return (
     <div className="flex-col">
@@ -83,7 +105,7 @@ const Home: NextPage = () => {
   api.posts.getAll.useQuery();
 
   // Return empty div if users isn't loaded
-  if (!userLoaded ) return <div />;
+  if (!userLoaded) return <div />;
 
   return (
     <>
@@ -103,7 +125,6 @@ const Home: NextPage = () => {
             {isSignedIn && (
               <div>
                 <CreatePostWizard />
-                {/* <SignOutButton /> */}
               </div>
             )}
           </div>

@@ -3,7 +3,11 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  privateProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 
 const filterUserForClient = (user: User) => {
   return {
@@ -14,9 +18,11 @@ const filterUserForClient = (user: User) => {
 };
 
 export const postsRouter = createTRPCRouter({
+  // Procedure to get all posts
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.prisma.post.findMany({
       take: 100,
+      orderBy: [{ createdAt: "desc" }],
     });
 
     const users = (
@@ -34,10 +40,33 @@ export const postsRouter = createTRPCRouter({
           code: "NOT_FOUND",
           message: "Author for post not found",
         });
-      return { post, author: {
-        ...author,
-        username: author.username
-      }};
+      return {
+        post,
+        author: {
+          ...author,
+          username: author.username,
+        },
+      };
     });
   }),
+
+  // Private Procedure to create posts
+  create: privateProcedure
+    .input(
+      z.object({
+        content: z.string().emoji().min(1).max(280),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const authorId = ctx.userId;
+
+      const post = await ctx.prisma.post.create({
+        data: {
+          authorId,
+          content: input.content,
+        },
+      });
+
+      return post;
+    }),
 });
