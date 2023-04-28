@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { LoadingPage, LoadingSpinner } from "~/components/loading";
 import { useState } from "react";
+import { PageLayout } from "~/components/layout";
 
 // Add relativeTime pluging
 dayjs.extend(relativeTime);
@@ -148,24 +149,17 @@ const Home: NextPage = () => {
   if (!userLoaded) return <div />;
 
   return (
-    <main className="flex h-screen justify-center">
-      <div className="h-full w-full border-x md:max-w-2xl">
-        <div className="border-b border-slate-400 p-4">
-          {!isSignedIn && (
-            <div className="flex-justify-center">
-              <SignInButton />
-            </div>
-          )}
-          {isSignedIn && (
-            <div>
-              <CreatePostWizard />
-            </div>
-          )}
-        </div>
-
-        <Feed />
+    <PageLayout>
+      <div className="flex border-b border-slate-400 p-4">
+        {!isSignedIn && (
+          <div className="flex justify-center">
+            <SignInButton />
+          </div>
+        )}
+        {isSignedIn && <CreatePostWizard />}
       </div>
-    </main>
+      <Feed />
+    </PageLayout>
   );
 };
 

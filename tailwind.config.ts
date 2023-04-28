@@ -5,5 +5,6 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-call
+  plugins: [require("tailwind-scrollbar")({ nocompatible: true })],
 } satisfies Config;
