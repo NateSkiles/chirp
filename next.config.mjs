@@ -10,6 +10,12 @@ const config = {
 
   images: {
     domains: ["images.clerk.dev"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.gravatar.com",
+      },
+    ],
   },
 
   /**
